@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %}Мой профиль - Career AI{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto mt-10 bg-white p-8 rounded-2xl shadow-lg">
+    <h2 class="text-3xl font-bold text-gray-900 mb-6 border-b pb-4">Профиль студента</h2>
+
+    {% if profile %}
+    <div class="space-y-4">
+        <p><strong>ID:</strong> {{ profile.person_id }}</p>
+        <p><strong>Фамилия:</strong> {{ user.last_name }}</p>
+        <p><strong>Имя:</strong> {{ user.first_name }}</p>
+        <p><strong>Отчество:</strong> {{ profile.patronymic|default:"-" }}</p>
+        <hr>
+        <p><strong>Lastname:</strong> {{ profile.lastname_en }}</p>
+        <p><strong>Firstname:</strong> {{ profile.firstname_en }}</p>
+        <p><strong>Patronymic:</strong> {{ profile.patronymic_en|default:"-" }}</p>
+        <hr>
+        <p><strong>Телефон:</strong> {{ profile.phone }}</p>
+        <p><strong>Почта:</strong> {{ user.email }}</p>
+        <p><strong>Дата рождения:</strong> {{ profile.birthdate }}</p>
+        <p><strong>Роль:</strong> Студент</p>
+        <hr>
+        <p class="text-sm text-gray-500"><strong>Последнее обновление:</strong> {{ profile.updated_at|date:"d.m.Y H:i" }}</p>
+    </div>
+    {% else %}
+        <p class="text-red-500">Не удалось загрузить данные профиля.</p>
+    {% endif %}
+    
+    <div class="mt-8">
+        <a href="{% url 'logout' %}" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-xl">
+            Выйти из аккаунта
+        </a>
+    </div>
+</div>
+{% endblock %}

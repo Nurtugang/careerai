@@ -2,170 +2,172 @@ import logging
 import requests
 from django.conf import settings
 from datetime import datetime, timedelta
-from .ml_recommender import VacancyRecommender
+from .gemini_service import generate_search_queries, analyze_vacancies_batch
 
 logger = logging.getLogger('core')
 
 
-def get_hh_vacancies(student_profile=None, per_page=10):
+def get_hh_vacancies(student_profile=None, per_page=10, max_queries=1, batch_count=1):
+    """
+    Получает вакансии из HeadHunter API
+    
+    Args:
+        student_profile: профиль студента (если авторизован)
+        per_page: сколько вакансий вернуть
+        max_queries: максимальное количество поисковых запросов (по умолчанию 1)
+    """
     logger.info("=" * 80)
     logger.info("🌐 ЗАПРОС ВАКАНСИЙ ИЗ HeadHunter API")
     logger.info("=" * 80)
     
     list_url = settings.HH_API_URL
-    date_from = (datetime.now() - timedelta(days=30)).isoformat()
+    headers = {'User-Agent': 'CareerAI/1.0'}
 
-    fetch_count = 100 if student_profile else per_page
+    all_vacancies = []
+    unique_ids = set()
     
-    logger.info(f"📋 Параметры запроса:")
-    logger.info(f"  - Профиль студента: {'✓ Есть' if student_profile else '✗ Нет'}")
-    logger.info(f"  - Запрашиваем вакансий: {fetch_count}")
-    logger.info(f"  - Нужно вернуть: {per_page}")
-    logger.info(f"  - Регион: Казахстан (area=40)")
-    logger.info(f"  - Период: последние 30 дней (с {date_from[:10]})")
-
-    params = {
-        'area': '40',
-        'publication_time_from': date_from,
-        'per_page': fetch_count,
-        'page': 0,
-        'order_by': 'publication_time'
-    }
-    
+    # ==================== ГЕНЕРАЦИЯ ПОИСКОВЫХ ЗАПРОСОВ ====================
     if student_profile:
-        specialization = student_profile.education.specialization
-        params['text'] = specialization
-        params['experience'] = 'noExperience'
-        logger.info(f"  - Фильтр по специальности: {specialization}")
-        logger.info(f"  - Фильтр опыта: Без опыта")
-
-    headers = {
-        'User-Agent': 'CareerAI/1.0'
-    }
-
-    try:
+        logger.info(f"✅ Студент авторизован (ID: {student_profile.person_id})")
+        logger.info(f"   Специальность: {student_profile.education.specialization if hasattr(student_profile, 'education') else 'Неизвестно'}")
+        
+        # Генерируем умные поисковые запросы через Gemini
+        search_queries = generate_search_queries(student_profile, max_queries=max_queries)
+        
         logger.info("-" * 80)
-        logger.info(f"📡 Отправляем запрос к HeadHunter API...")
-        logger.info(f"   URL: {list_url}")
+        logger.info(f"🔍 Будем искать по {len(search_queries)} {'запросу' if len(search_queries) == 1 else 'запросам'}:")
+        for i, query in enumerate(search_queries, 1):
+            logger.info(f"   {i}. '{query}'")
         
-        list_response = requests.get(list_url, params=params, headers=headers, timeout=10)
-        list_response.raise_for_status()
-        
-        items = list_response.json().get('items', [])
-        logger.info(f"✅ Получен ответ от HH API")
-        logger.info(f"   HTTP Status: {list_response.status_code}")
-        logger.info(f"   Вакансий в ответе: {len(items)}")
-        
-        if student_profile and len(items) < 10:
-            logger.warning(f"⚠️  Мало вакансий ({len(items)}). Делаем запрос без фильтра по специальности...")
-            
-            params_fallback = {
-                'area': '40',
-                'publication_time_from': date_from,
-                'per_page': 50,
-                'page': 0,
-                'experience': 'noExperience',
-                'order_by': 'publication_time'
-            }
-            
-            fallback_response = requests.get(list_url, params=params_fallback, headers=headers, timeout=10)
-            fallback_response.raise_for_status()
-            fallback_items = fallback_response.json().get('items', [])
-            
-            existing_ids = {item.get('id') for item in items}
-            for fallback_item in fallback_items:
-                if fallback_item.get('id') not in existing_ids:
-                    items.append(fallback_item)
-                    if len(items) >= 50:
-                        break
-            
-            logger.info(f"  ✓ Добавлено вакансий: {len(items) - len(existing_ids)}")
-        
-        vacancies = []
-
+    else:
+        logger.info("ℹ️  Гость (не авторизован)")
+        search_queries = [None]  # Один запрос без фильтра
+    
+    # ==================== ПОИСК ПО ВСЕМ ЗАПРОСАМ ====================
+    queries_used = 0
+    min_vacancies_needed = 10  # Минимум вакансий для продолжения
+    
+    for idx, query in enumerate(search_queries, 1):
         logger.info("-" * 80)
-        logger.info(f"🔍 Загружаем детали вакансий (навыки, описание)...")
-        
-        for idx, item in enumerate(items, 1):
-            detail_url = item.get('url')
-            if not detail_url:
-                logger.warning(f"  ⚠️  Вакансия #{idx}: URL отсутствует, пропускаем")
-                continue
-
-            try:
-                detail_response = requests.get(detail_url, headers=headers, timeout=5)
-                detail_response.raise_for_status()
-                item_details = detail_response.json()
-                
-                key_skills_list = []
-                for skill in item_details.get('key_skills', []):
-                    key_skills_list.append(skill['name'])
-                
-                if idx <= 3:
-                    logger.info(f"  ✓ Вакансия #{idx}: {item.get('name', 'Без названия')}")
-                    logger.info(f"      Навыки: {', '.join(key_skills_list) if key_skills_list else 'не указаны'}")
-
-            except requests.RequestException as e:
-                logger.warning(f"  ⚠️  Вакансия #{idx}: Ошибка загрузки деталей - {e}")
-                key_skills_list = []
-            
-            salary = item.get('salary')
-            salary_display = "Не указана"
-            if salary:
-                salary_from = salary.get('from')
-                salary_to = salary.get('to')
-                currency = salary.get('currency', '').upper()
-                
-                if salary_from and salary_to:
-                    salary_display = f"{salary_from:,} - {salary_to:,} {currency}".replace(',', ' ')
-                elif salary_from:
-                    salary_display = f"от {salary_from:,} {currency}".replace(',', ' ')
-                elif salary_to:
-                    salary_display = f"до {salary_to:,} {currency}".replace(',', ' ')
-
-            vacancies.append({
-                'id': item.get('id'),
-                'title': item.get('name'),
-                'company': item.get('employer', {}).get('name'),
-                'city': item.get('area', {}).get('name'),
-                'salary': salary_display,
-                'url': item.get('alternate_url'),
-                'employment': item.get('employment', {}).get('name', 'Не указано'),
-                'snippet': item.get('snippet', {}).get('requirement') or "Нет описания.",
-                'skills': key_skills_list,
-            })
-        
-        if len(items) > 3:
-            logger.info(f"  ... и еще {len(items) - 3} вакансий загружено")
-        
-        logger.info(f"✅ Всего собрано вакансий: {len(vacancies)}")
-        
-        if student_profile and vacancies:
-            logger.info("-" * 80)
-            logger.info(f"🤖 Студент авторизован! Запускаем ML рекомендации...")
-            logger.info(f"   Student ID: {student_profile.person_id}")
-            logger.info(f"   Специальность: {student_profile.education.specialization if hasattr(student_profile, 'education') else 'Неизвестно'}")
-            
-            recommender = VacancyRecommender()
-            vacancies = recommender.get_recommendations(
-                student_profile=student_profile,
-                vacancies=vacancies,
-                top_n=per_page
-            )
-            logger.info(f"✅ ML рекомендации применены успешно")
+        if query:
+            logger.info(f"📡 Запрос #{idx}/{len(search_queries)}: '{query}'")
         else:
-            logger.info("-" * 80)
-            if not student_profile:
-                logger.info(f"ℹ️  Студент НЕ авторизован - возвращаем первые {per_page} вакансий БЕЗ рекомендаций")
-            vacancies = vacancies[:per_page]
+            logger.info(f"📡 Запрос #{idx}/{len(search_queries)}: без фильтра")
         
-        logger.info("=" * 80)    
-        return vacancies
-
-    except requests.RequestException as e:
-        logger.error("=" * 80)
-        logger.error(f"❌ ОШИБКА при запросе к HH API")
-        logger.error(f"   Тип: {type(e).__name__}")
-        logger.error(f"   Сообщение: {str(e)}", exc_info=True)
-        logger.error("=" * 80)
-        return []
+        params = {
+            'area': '40',
+            'per_page': 50,
+            'page': 0,
+            'order_by': 'publication_time'
+        }
+        
+        if query:
+            params['text'] = query
+            params['experience'] = 'noExperience'
+        
+        try:
+            response = requests.get(list_url, params=params, headers=headers, timeout=10)
+            response.raise_for_status()
+            items = response.json().get('items', [])
+            
+            logger.info(f"   ✅ Получено вакансий: {len(items)}")
+            
+            new_count = 0
+            for item in items:
+                vacancy_id = item.get('id')
+                if vacancy_id and vacancy_id not in unique_ids:
+                    unique_ids.add(vacancy_id)
+                    all_vacancies.append(item)
+                    new_count += 1
+            
+            logger.info(f"   ✓ Добавлено новых уникальных: {new_count}")
+            logger.info(f"   📊 Всего уникальных вакансий: {len(all_vacancies)}")
+            
+            queries_used += 1
+            
+            # ========== ПРОВЕРКА: НУЖЕН ЛИ ЕЩЕ ЗАПРОС? ==========
+            if len(all_vacancies) < min_vacancies_needed and queries_used < len(search_queries):
+                logger.warning(f"   ⚠️  Всего {len(all_vacancies)} вакансий (мин: {min_vacancies_needed})")
+                logger.info(f"   ➡️  Автоматически делаем еще один поисковый запрос...")
+                continue  # Идем к следующему запросу
+            else:
+                logger.info(f"   ✅ Достаточно вакансий, останавливаем поиск")
+                break  # Хватит, останавливаемся
+            
+        except requests.RequestException as e:
+            logger.error(f"   ❌ Ошибка запроса: {e}")
+            queries_used += 1
+            continue
+    
+    # ==================== ЗАГРУЗКА ДЕТАЛЕЙ ====================
+    logger.info("-" * 80)
+    logger.info(f"🔍 Загружаем детали для {len(all_vacancies)} вакансий...")
+    
+    vacancies = []
+    for idx, item in enumerate(all_vacancies, 1):
+        detail_url = item.get('url')
+        if not detail_url:
+            continue
+        
+        try:
+            detail_response = requests.get(detail_url, headers=headers, timeout=5)
+            detail_response.raise_for_status()
+            item_details = detail_response.json()
+            
+            key_skills_list = [skill['name'] for skill in item_details.get('key_skills', [])]
+            
+            if idx <= 5:
+                logger.info(f"  ✓ Вакансия #{idx}: {item.get('name', 'Без названия')}")
+                logger.info(f"      Навыки: {', '.join(key_skills_list[:3]) if key_skills_list else 'не указаны'}")
+        
+        except requests.RequestException:
+            key_skills_list = []
+        
+        # Форматируем зарплату
+        salary = item.get('salary')
+        salary_display = "Не указана"
+        if salary:
+            salary_from = salary.get('from')
+            salary_to = salary.get('to')
+            currency = salary.get('currency', '').upper()
+            
+            if salary_from and salary_to:
+                salary_display = f"{salary_from:,} - {salary_to:,} {currency}".replace(',', ' ')
+            elif salary_from:
+                salary_display = f"от {salary_from:,} {currency}".replace(',', ' ')
+            elif salary_to:
+                salary_display = f"до {salary_to:,} {currency}".replace(',', ' ')
+        
+        vacancies.append({
+            'id': item.get('id'),
+            'title': item.get('name'),
+            'company': item.get('employer', {}).get('name'),
+            'city': item.get('area', {}).get('name'),
+            'salary': salary_display,
+            'url': item.get('alternate_url'),
+            'employment': item.get('employment', {}).get('name', 'Не указано'),
+            'snippet': item.get('snippet', {}).get('requirement') or "Нет описания.",
+            'skills': key_skills_list,
+        })
+    
+    if len(all_vacancies) > 5:
+        logger.info(f"  ... и еще {len(all_vacancies) - 5} вакансий")
+    
+    logger.info(f"✅ Всего собрано вакансий: {len(vacancies)}")
+    
+    # ==================== GEMINI АНАЛИЗ ====================
+    logger.info("-" * 80)
+    if student_profile and vacancies:
+        logger.info(f"🤖 Студент авторизован → запускаем Gemini-анализ...")
+        
+        # Анализируем через Gemini
+        analyzed = analyze_vacancies_batch(vacancies, student_profile, batch_size=20, max_batches=batch_count)
+        
+        # Возвращаем топ-N (уже отсортированы внутри analyze_vacancies_batch)
+        logger.info(f"✅ Возвращаем топ-{per_page} вакансий с Gemini-рекомендациями")
+        logger.info("=" * 80)
+        return analyzed[:per_page]
+    else:
+        logger.info(f"ℹ️  Гость → возвращаем первые {per_page} вакансий БЕЗ Gemini-анализа")
+        logger.info("=" * 80)
+        return vacancies[:per_page]

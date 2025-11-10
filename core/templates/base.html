@@ -5,6 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Career AI - Твой карьерный помощник{% endblock %}</title>
     
+    <!-- Светлая тема -->
+    <link rel="icon" href="https://shakarim.edu.kz/storage/logo/new_logo_square_indigo.ico?v=2" type="image/x-icon" media="(prefers-color-scheme: light)">
+    <link rel="shortcut icon" href="https://shakarim.edu.kz/storage/logo/new_logo_square_indigo.ico?v=2" type="image/x-icon" media="(prefers-color-scheme: light)">
+    <link rel="apple-touch-icon" href="https://shakarim.edu.kz/storage/logo/new_logo_square_indigo.ico?v=2" media="(prefers-color-scheme: light)">
+
+    <!-- Тёмная тема -->
+    <link rel="icon" href="https://shakarim.edu.kz/storage/logo/new_logo_square.ico?v=2" type="image/x-icon" media="(prefers-color-scheme: dark)">
+    <link rel="shortcut icon" href="https://shakarim.edu.kz/storage/logo/new_logo_square.ico?v=2" type="image/x-icon" media="(prefers-color-scheme: dark)">
+    <link rel="apple-touch-icon" href="https://shakarim.edu.kz/storage/logo/new_logo_square.ico?v=2" media="(prefers-color-scheme: dark)">
+    
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -37,9 +47,7 @@
                 
                 <!-- Логотип -->
                 <div class="flex items-center space-x-3">
-                    <div class="bg-gradient-to-br from-[#314266] to-[#4d5f80] p-2.5 rounded-xl shadow-md">
-                        <i class="fas fa-rocket text-white text-2xl"></i>
-                    </div>
+                    <img src="https://shakarim.edu.kz/storage/logo/new_logo_indigo.png" alt="Shakarim University" class="h-12 w-auto">
                     <a href="{% url 'index' %}" class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#314266] to-[#2b395a] hover:from-[#2b395a] hover:to-[#25304d] transition-all duration-300">
                         Career AI
                     </a>
@@ -150,14 +158,12 @@
     </main>
     
     <!-- Футер -->
-    <footer class="bg-white/90 backdrop-blur-md mt-20 border-t border-[#eaf0f9]">
+    <footer class="bg-white/90 backdrop-blur-md border-t border-[#eaf0f9]">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
                 <div class="col-span-1 md:col-span-2">
                     <div class="flex items-center space-x-3 mb-4">
-                        <div class="bg-gradient-to-br from-[#314266] to-[#4d5f80] p-2.5 rounded-xl shadow-md">
-                            <i class="fas fa-rocket text-white text-xl"></i>
-                        </div>
+                        <img src="https://shakarim.edu.kz/storage/logo/new_logo_indigo.png" alt="Shakarim University" class="h-10 w-auto">
                         <span class="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#314266] to-[#2b395a]">
                             Career AI
                         </span>
@@ -172,9 +178,8 @@
                     <h3 class="font-bold text-gray-900 mb-4 text-lg">Навигация</h3>
                     <ul class="space-y-2">
                         <li><a href="{% url 'index' %}" class="text-gray-600 hover:text-[#314266] transition-colors duration-200">Главная</a></li>
-                        <li><a href="#" class="text-gray-600 hover:text-[#314266] transition-colors duration-200">О проекте</a></li>
-                        <li><a href="#" class="text-gray-600 hover:text-[#314266] transition-colors duration-200">Как это работает</a></li>
-                        <li><a href="#" class="text-gray-600 hover:text-[#314266] transition-colors duration-200">FAQ</a></li>
+                        <li><a href="{% url 'about' %}" class="text-gray-600 hover:text-[#314266] transition-colors duration-200">О нас</a></li>
+                        <li><a href="{% url 'presentation' %}" class="text-gray-600 hover:text-[#314266] transition-colors duration-200">Презентация</a></li>
                     </ul>
                 </div>
                 

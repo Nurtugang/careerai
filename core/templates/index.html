@@ -4,104 +4,61 @@
 
 {% block content %}
 
-<!-- Приветственный блок -->
-<div class="bg-gradient-to-r from-[#314266] via-[#314266] to-[#2b395a] rounded-3xl shadow-2xl p-8 md:p-12 mb-8 text-white transform transition-all duration-300 hover:shadow-[#314266]/50">
-    <div class="flex flex-col md:flex-row items-center justify-between gap-6">
-        <div class="flex-1">
-            <h1 class="text-4xl md:text-5xl font-bold mb-4">
-                Добро пожаловать,
-                <span class="text-yellow-300">
+<!-- Приветственный блок и Совет дня -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <!-- Приветственный блок -->
+    <div class="bg-gradient-to-r from-[#314266] via-[#314266] to-[#2b395a] rounded-3xl shadow-2xl p-8 md:p-12 text-white transform transition-all duration-300 hover:shadow-[#314266]/50">
+        <div class="flex flex-col gap-6">
+            <div class="flex-1">
+                <h1 class="text-4xl md:text-5xl font-bold mb-4">
+                    Добро пожаловать,
+                    <span class="text-yellow-300">
+                    {% if user.is_authenticated %}
+                        {{ user.first_name|default:user.username }}
+                    {% else %}
+                        Гость
+                    {% endif %}
+                    </span>! 👋
+                </h1>
+                <p class="text-xl text-gray-200 mb-6">
+                    Мы подобрали для вас лучшие возможности для развития карьеры
+                </p>
                 {% if user.is_authenticated %}
-                    {{ user.first_name|default:user.username }}
-                {% else %}
-                    Гость
-                {% endif %}
-                </span>! 👋
-            </h1>
-            <p class="text-xl text-gray-200 mb-6">
-                Мы подобрали для вас лучшие возможности для развития карьеры
-            </p>
-            {% if user.is_authenticated %}
-            <div class="flex flex-wrap gap-4">
-                <!-- Ссылка на профиль -->
-                <a href="{% url 'profile' %}" class="bg-white text-[#314266] px-6 py-3 rounded-xl font-semibold hover:bg-gray-100 hover:shadow-lg transition-all duration-300 transform hover:scale-105 flex items-center space-x-2">
-                    <i class="fas fa-user-edit"></i>
-                    <span>Мой профиль</span>
-                </a>
-                <!-- Кнопка Выход -->
-                <a href="{% url 'logout' %}" class="bg-[#314266]/30 backdrop-blur-sm text-white px-6 py-3 rounded-xl font-semibold hover:bg-[#314266]/50 transition-all duration-300 flex items-center space-x-2 border border-white/20">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Выход</span>
-                </a>
-            </div>
-            {% endif %}
-        </div>
-        <div class="hidden md:block">
-            <div class="bg-white/20 backdrop-blur-lg rounded-2xl p-6 border border-white/30 shadow-xl">
-                <div class="text-center mb-2">
-                    <i class="fas fa-chart-line text-6xl drop-shadow-lg"></i>
+                <div class="flex flex-wrap gap-4">
+                    <!-- Ссылка на профиль -->
+                    <a href="{% url 'profile' %}" class="bg-white text-[#314266] px-6 py-3 rounded-xl font-semibold hover:bg-gray-100 hover:shadow-lg transition-all duration-300 transform hover:scale-105 flex items-center space-x-2">
+                        <i class="fas fa-user-edit"></i>
+                        <span>Мой профиль</span>
+                    </a>
+                    <!-- Кнопка Выход -->
+                    <a href="{% url 'logout' %}" class="bg-[#314266]/30 backdrop-blur-sm text-white px-6 py-3 rounded-xl font-semibold hover:bg-[#314266]/50 transition-all duration-300 flex items-center space-x-2 border border-white/20">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Выход</span>
+                    </a>
                 </div>
-                <p class="text-sm font-medium opacity-90">Рекомендаций сегодня</p>
-                <p class="text-4xl font-bold mt-2">24</p>
+                {% endif %}
             </div>
         </div>
-    </div>
-</div>
-
-<!-- Статистика -->
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-    <!-- Вакансии -->
-    <div class="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 border border-[#eaf0f9]">
-        <div class="flex items-center justify-between mb-4">
-            <div class="bg-[#eaf0f9] text-[#314266] p-3 rounded-xl">
-                <i class="fas fa-briefcase text-2xl"></i>
-            </div>
-            <span class="bg-green-100 text-green-700 text-sm font-semibold px-3 py-1 rounded-full flex items-center space-x-1">
-                <i class="fas fa-arrow-up text-xs"></i>
-                <span>12%</span>
-            </span>
-        </div>
-        <h3 class="text-gray-500 text-sm font-medium mb-1">Вакансии</h3>
-        <p class="text-3xl font-bold text-gray-900">156</p>
     </div>
     
-    <!-- События -->
-    <div class="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 border border-[#eaf0f9]">
-        <div class="flex items-center justify-between mb-4">
-            <div class="bg-[#eaf0f9] text-[#314266] p-3 rounded-xl">
-                <i class="fas fa-calendar-alt text-2xl"></i>
-            </div>
-            <span class="bg-green-100 text-green-700 text-sm font-semibold px-3 py-1 rounded-full flex items-center space-x-1">
-                <i class="fas fa-arrow-up text-xs"></i>
-                <span>8%</span>
-            </span>
+    <!-- Совет дня -->
+    <div class="bg-gradient-to-br from-[#314266] via-[#314266] to-[#2b395a] rounded-3xl shadow-2xl p-8 md:p-12 text-white border border-[#4d5f80]">
+        <h3 class="text-2xl font-bold mb-4 flex items-center space-x-2">
+            <i class="fas fa-lightbulb"></i>
+            <span>Совет дня от Career AI</span>
+        </h3>
+        <div class="bg-white/20 backdrop-blur-sm rounded-xl p-4 mb-4 border border-white/30">
+            <p class="text-sm mb-3 font-semibold">
+                💡 Регулярно обновляйте свой профиль!
+            </p>
+            <p class="text-sm opacity-90 leading-relaxed">
+                Добавьте новые навыки, проекты и достижения. Это поможет нашей системе 
+                подбирать более точные рекомендации и повысит ваши шансы найти идеальную работу.
+            </p>
         </div>
-        <h3 class="text-gray-500 text-sm font-medium mb-1">События</h3>
-        <p class="text-3xl font-bold text-gray-900">23</p>
-    </div>
-    
-    <!-- Избранное -->
-    <div class="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 border border-[#eaf0f9]">
-        <div class="flex items-center justify-between mb-4">
-            <div class="bg-pink-100 text-pink-600 p-3 rounded-xl">
-                <i class="fas fa-heart text-2xl"></i>
-            </div>
-            <span class="bg-[#eaf0f9] text-[#314266] text-sm font-semibold px-3 py-1 rounded-full">42</span>
-        </div>
-        <h3 class="text-gray-500 text-sm font-medium mb-1">Избранное</h3>
-        <p class="text-3xl font-bold text-gray-900">18</p>
-    </div>
-    
-    <!-- Совпадение -->
-    <div class="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 border border-[#eaf0f9]">
-        <div class="flex items-center justify-between mb-4">
-            <div class="bg-orange-100 text-orange-600 p-3 rounded-xl">
-                <i class="fas fa-star text-2xl"></i>
-            </div>
-            <span class="bg-yellow-100 text-yellow-700 text-sm font-semibold px-3 py-1 rounded-full">92%</span>
-        </div>
-        <h3 class="text-gray-500 text-sm font-medium mb-1">Совпадение</h3>
-        <p class="text-3xl font-bold text-gray-900">Высокое</p>
+        <button onclick="window.location.href='https://platonus.shakarim.kz'" class="w-full bg-white text-[#314266] py-3 rounded-xl font-semibold hover:bg-gray-100 shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105">
+            Обновить профиль сейчас
+        </button>
     </div>
 </div>
 
@@ -121,7 +78,7 @@
 </div>
 
 <!-- Карточки рекомендаций -->
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
     
     {% if recommendations %}
         {% for vacancy in recommendations %}
@@ -141,9 +98,11 @@
                             <h3 class="text-xl font-bold text-gray-900 leading-tight">{{ vacancy.title }}</h3>
                         </div>
                     </div>
+                    {% if user.is_authenticated %}
                     <div class="bg-green-100 text-green-700 text-sm font-bold px-3 py-1 rounded-full whitespace-nowrap shrink-0">
                         {{ vacancy.similarity_score|floatformat:2 }}%
                     </div>
+                    {% endif %}
                 </div>
                 
                 <div class="mb-4">
@@ -183,15 +142,6 @@
                         <i class="fas fa-external-link-alt"></i>
                         <span>Подробнее на hh.kz</span>
                     </a>
-                    <div class="flex gap-2">
-                        <button class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 shadow-md">
-                            <i class="fas fa-thumbs-up"></i>
-                            <span>Интересно</span>
-                        </button>
-                        <button class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-xl transition-all duration-200 transform hover:scale-105">
-                            <i class="fas fa-thumbs-down"></i>
-                        </button>
-                    </div>
                 </div>
             </div>
         </div>
@@ -201,77 +151,6 @@
             <p class="text-gray-600">Не удалось загрузить вакансии. Попробуйте обновить страницу позже.</p>
         </div>
     {% endif %}
-    
-</div>
-
-<!-- Кнопка загрузить еще -->
-<div class="text-center mb-8">
-    <button class="bg-gradient-to-r from-[#314266] to-[#2b395a] text-white px-8 py-4 rounded-xl font-semibold hover:from-[#2b395a] hover:to-[#25304d] shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 flex items-center mx-auto space-x-2">
-        <i class="fas fa-sync-alt"></i>
-        <span>Загрузить еще рекомендации</span>
-    </button>
-</div>
-
-<!-- Дополнительные секции -->
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-    
-    <!-- Быстрые действия -->
-    <div class="bg-white rounded-2xl shadow-lg p-6 border border-[#eaf0f9]">
-        <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center space-x-2">
-            <i class="fas fa-bolt text-yellow-500"></i>
-            <span>Быстрые действия</span>
-        </h3>
-        <div class="space-y-3">
-            <button class="w-full bg-[#eaf0f9] hover:bg-[#dce6f5] text-[#314266] p-4 rounded-xl transition-all duration-200 text-left flex items-center justify-between group">
-                <span class="flex items-center space-x-3">
-                    <i class="fas fa-search text-[#314266] group-hover:scale-110 transition-transform"></i>
-                    <span class="font-medium">Найти вакансии</span>
-                </span>
-                <i class="fas fa-arrow-right text-[#4d5f80] group-hover:translate-x-1 transition-transform"></i>
-            </button>
-            <button class="w-full bg-purple-50 hover:bg-purple-100 text-purple-700 p-4 rounded-xl transition-all duration-200 text-left flex items-center justify-between group">
-                <span class="flex items-center space-x-3">
-                    <i class="fas fa-calendar-check text-purple-500 group-hover:scale-110 transition-transform"></i>
-                    <span class="font-medium">Посмотреть события</span>
-                </span>
-                <i class="fas fa-arrow-right text-purple-400 group-hover:translate-x-1 transition-transform"></i>
-            </button>
-            <button class="w-full bg-green-50 hover:bg-green-100 text-green-700 p-4 rounded-xl transition-all duration-200 text-left flex items-center justify-between group">
-                <span class="flex items-center space-x-3">
-                    <i class="fas fa-heart text-green-500 group-hover:scale-110 transition-transform"></i>
-                    <span class="font-medium">Мое избранное</span>
-                </span>
-                <i class="fas fa-arrow-right text-green-400 group-hover:translate-x-1 transition-transform"></i>
-            </button>
-            <a href="{% url 'profile' %}" class="w-full bg-orange-50 hover:bg-orange-100 text-orange-700 p-4 rounded-xl transition-all duration-200 text-left flex items-center justify-between group">
-                <span class="flex items-center space-x-3">
-                    <i class="fas fa-cog text-orange-500 group-hover:scale-110 transition-transform"></i>
-                    <span class="font-medium">Настройки профиля</span>
-                </span>
-                <i class="fas fa-arrow-right text-orange-400 group-hover:translate-x-1 transition-transform"></i>
-            </a>
-        </div>
-    </div>
-    
-    <!-- Совет дня -->
-    <div class="bg-gradient-to-br from-[#314266] via-[#314266] to-[#2b395a] rounded-2xl shadow-lg p-6 text-white border border-[#4d5f80]">
-        <h3 class="text-xl font-bold mb-4 flex items-center space-x-2">
-            <i class="fas fa-lightbulb"></i>
-            <span>Совет дня от Career AI</span>
-        </h3>
-        <div class="bg-white/20 backdrop-blur-sm rounded-xl p-4 mb-4 border border-white/30">
-            <p class="text-sm mb-3 font-semibold">
-                💡 Регулярно обновляйте свой профиль!
-            </p>
-            <p class="text-sm opacity-90 leading-relaxed">
-                Добавьте новые навыки, проекты и достижения. Это поможет нашей системе 
-                подбирать более точные рекомендации и повысит ваши шансы найти идеальную работу.
-            </p>
-        </div>
-        <button onclick="window.location.href='https://platonus.shakarim.kz'"  class="w-full bg-white text-[#314266] py-3 rounded-xl font-semibold hover:bg-gray-100 shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105">
-            Обновить профиль сейчас
-        </button>
-    </div>
     
 </div>
 

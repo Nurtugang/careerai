@@ -51,6 +51,14 @@
                         <i class="fas fa-home"></i>
                         <span>Главная</span>
                     </a>
+                    <a href="{% url 'about' %}" class="text-gray-700 hover:text-[#314266] font-medium transition-colors duration-200 flex items-center space-x-2">
+                        <i class="fas fa-info-circle"></i>
+                        <span>О нас</span>
+                    </a>
+                    <a href="{% url 'presentation' %}" class="text-gray-700 hover:text-[#314266] font-medium transition-colors duration-200 flex items-center space-x-2">
+                        <i class="fa-solid fa-file-powerpoint"></i>
+                        <span>Презентация</span>
+                    </a>
                     
                     <!-- Меню пользователя или кнопка Вход -->
                     {% if user.is_authenticated %}
@@ -105,6 +113,14 @@
                 <a href="{% url 'index' %}" class="block text-gray-700 hover:text-[#314266] font-medium py-2 transition-colors duration-200 flex items-center space-x-3">
                     <i class="fas fa-home text-[#314266]"></i>
                     <span>Главная</span>
+                </a>
+                <a href="{% url 'about' %}" class="block text-gray-700 hover:text-[#314266] font-medium py-2 transition-colors duration-200 flex items-center space-x-3">
+                    <i class="fas fa-info-circle text-[#314266]"></i>
+                    <span>О нас</span>
+                </a>
+                <a href="{% url 'presentation' %}" class="block text-gray-700 hover:text-[#314266] font-medium py-2 transition-colors duration-200 flex items-center space-x-3">
+                    <i class="fa-solid fa-file-powerpoint text-[#314266]"></i>
+                    <span>Презентация</span>
                 </a>
                 
                 {% if user.is_authenticated %}
